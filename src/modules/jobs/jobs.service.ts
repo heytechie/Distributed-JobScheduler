@@ -1,8 +1,8 @@
 import type { CreateJobDto } from "./job.dto.js";
-import { jobRepository } from "./job.repository.js";
+import { JobRepository } from "./job.repository.js";
 
 export class jobService {
-    constructor(private readonly jobRepository: jobRepository) {}
+    constructor(private readonly jobRepository: JobRepository) {}
 
     async createJob(data: CreateJobDto) {
         return await this.jobRepository.create(data);
