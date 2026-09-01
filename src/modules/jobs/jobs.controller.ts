@@ -2,9 +2,9 @@ import type {Request, Response} from 'express';
 import {jobService} from './jobs.service.js';
 import {createJobDto} from './job.dto.js';
 import { asyncHandler } from '../../utils/async-handler.js';
-import { jobRepository } from './job.repository.js';
+import { JobRepository } from './job.repository.js';
 
-const jobServiceInstance = new jobService(new jobRepository());
+const jobServiceInstance = new jobService(new JobRepository());
 export const createJob = asyncHandler(async(req: Request, res: Response) => {
     const data = createJobDto.parse(req.body);
     const job = await jobServiceInstance.createJob(data);
