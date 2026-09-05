@@ -55,4 +55,34 @@ export class JobRepository {
             })
         })
     }
+
+
+
+    async markSucceeded(id:string){
+         prisma.job.update({
+            where:{
+                id
+            },
+            data:{
+                status:"SUCCEEDED",
+                completedAt: new Date(),
+                lockedAt:null,
+                lockedBy:null
+            }
+        })
+    }
+
+    async markFailed(id:string){
+        prisma.job.update({
+            where:{
+                id
+            },
+            data:{
+                status:"FAILED",
+                failedAt:new Date(),
+                lockedAt:null,
+                lockedBy:null
+            }
+        }) 
+    }
 }
