@@ -59,7 +59,7 @@ export class JobRepository {
 
 
     async markSucceeded(id:string){
-         prisma.job.update({
+        return prisma.job.update({
             where:{
                 id
             },
@@ -72,8 +72,8 @@ export class JobRepository {
         })
     }
 
-    async markFailed(id:string){
-        prisma.job.update({
+    async markDead(id:string){
+        return prisma.job.update({
             where:{
                 id
             },
@@ -84,5 +84,19 @@ export class JobRepository {
                 lockedBy:null
             }
         }) 
+    }
+
+    async scheduleRetry(id:string,availableAt:Date){
+        return prisma.job.update({
+            where:{
+                id
+            },
+            data:{
+                status:"PENDING",
+                availableAt,
+                lockedAt :null,
+                lockedBy:null
+            }
+        })
     }
 }

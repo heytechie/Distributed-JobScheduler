@@ -55,16 +55,27 @@ export class Worker{
             attempt:job.attempts
          },"Job executed successfully")
        }catch(err){
-        await jobRepository.markFailed(job.id);
-        logger.error({
-            workerId:this.workerId,
-            jobId :job.id,
-            jobType: job.type,
-            attempt:job.attempts,
-            error:err
-         },"Job execution failed")
-
-         throw err;
+        if(job.attempts < job.maxAttempts){
+            const retryDelay = 1000 * Math.pow(2, job.attempts - 1); // Exponential backoff
+            const availableAt = new Date(Date.now() + retryDelay);
+            await jobRepository.scheduleRetry(job.id, availableAt);
+            logger.warn({
+                workerId:this.workerId,
+                jobId :job.id,
+                jobType: job.type,
+                attempt:job.attempts,
+                nextAttemptAt:availableAt
+            },"Job execution failed, scheduled for retry")
+        }else{
+            await jobRepository.markDead(job.id);
+            logger.error({
+                workerId:this.workerId,
+                jobId :job.id,
+                jobType: job.type,
+                attempt:job.attempts,
+                error:err
+            },"Job execution failed, marked as dead")
+        }
        }
     }
     
