@@ -1,10 +1,15 @@
-import { Worker } from "./worker.js";
+import Worker from './worker.js';
 
 const worker = new Worker();
 
-const job = await worker.claimJob();
+process.on('SIGINT',()=>{
+console.log("Stopping worker...");
+worker.stop();
+})
 
-if (job) {
-  console.log("Claimed job:", job);
-}
-console.log(`Worker started: ${worker.getId()}`);
+process.on('SIGTERM',()=>{
+console.log("Stopping worker...");
+worker.stop();
+})
+
+await worker.start();
