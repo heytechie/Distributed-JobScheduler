@@ -16,7 +16,7 @@ export class Reaper{
         console.log(`Reaper started with reaperId: ${this.reaperId}`);
         while(!this.shouldStop){
             const batch = 30;
-            while(true){
+            while(!this.shouldStop){
                 const staleBefore = new Date(Date.now() - 2*60*1000);
                 try {
                     const recoveryResult = await jobRepository.recoverStaleJobs(staleBefore, batch);
@@ -29,7 +29,7 @@ export class Reaper{
                         error: error,
                         reaperId: this.reaperId
                     }, "Error occurred while recovering stale jobs");
-                    sleep(5000);
+                    await sleep(5000);
                 }
             }
             await sleep(30000);

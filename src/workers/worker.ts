@@ -4,12 +4,14 @@ import  {JobRepository}  from '../modules/jobs/job.repository.js';
 import type { JobHandler } from './handlers/job.handler.js';
 import { jobHandlerRegistry } from './handlers/job-handler-registry.js';
 import { sleep } from '../utils/sleep.js';
+import { calculateRetryDelay } from '../utils/retry-delay.js';
 const jobRepository = new JobRepository();
 
 export default class Worker{
     private readonly workerId:string;
     private shouldStop:boolean = false;
-    private concurrency = 3;
+    private concurrency = 1;
+    private jobTimeout = 5000; // 5 seconds
     constructor(){
         this.workerId = crypto.randomUUID();
         
@@ -18,7 +20,6 @@ export default class Worker{
         },"Worker Created")
     }
 
-   
     private async runLoop(index:number):Promise<void>{
         console.log(`Worker loop ${index} started for workerId: ${this.workerId}`);
         while(!this.shouldStop){
@@ -31,7 +32,18 @@ export default class Worker{
             }
             try{
                 const handler = this.getHandler(job.type);
-                await handler.execute(job.payload);
+
+                const controller = new AbortController();
+                const timeoutHandle = setTimeout(() => {
+                    controller.abort();
+                }, this.jobTimeout);
+
+                try {
+                    await handler.execute(job.payload, controller.signal);
+                } finally {
+                    clearTimeout(timeoutHandle);
+                }
+
                 await jobRepository.markSucceeded(job.id);
                 logger.info({
                     workerId:this.workerId,
@@ -43,7 +55,7 @@ export default class Worker{
                     jobId:job.id
                 },`Error occurred while processing job: ${error}`);
                 if(job.attempts < job.maxAttempts){
-                    const retryDelay = Math.pow(2, job.attempts) * 1000;
+                    const retryDelay = calculateRetryDelay(job.attempts);
                     const availableAt = new Date(Date.now() + retryDelay);
                     await jobRepository.scheduleRetry(job.id, availableAt);
                     logger.info({
