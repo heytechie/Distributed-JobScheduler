@@ -1,14 +1,19 @@
 import { logger } from '../../config/logger.js';
 import { prisma } from '../../lib/prisma.js';
+import { calculateRetryDelay } from '../../utils/retry-delay.js';
 import type { CreateJobDto } from './job.dto.js';
 
 export class JobRepository {
+
     async create(data: CreateJobDto) {
+        const availableAt = new Date(Date.now() + (data.availableDelay ?? 0));
+
         return await prisma.job.create({
             data: {
                 type: data.type,
                 payload: data.payload,
                 maxAttempts: data.maxAttempts ?? 3,
+                availableAt,
             },
         });
     }
@@ -134,7 +139,7 @@ export class JobRepository {
 
             for (const job of jobs) {
                 if (job.attempts < job.maxAttempts) {
-                    const retryDelay = Math.pow(2, job.attempts) * 1000;
+                    const retryDelay = calculateRetryDelay(job.attempts);
                     const availableAt = new Date(Date.now() + retryDelay);
 
                     await tx.job.update({

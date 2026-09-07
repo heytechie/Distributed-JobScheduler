@@ -1,3 +1,3 @@
 export interface JobHandler{
-    execute(payload:unknown):Promise<void>
+    execute(payload:unknown,signal:AbortSignal):Promise<void>
 }
