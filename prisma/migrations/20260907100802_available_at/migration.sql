@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Job" ALTER COLUMN "availableAt" DROP NOT NULL,
+ALTER COLUMN "availableAt" DROP DEFAULT;
