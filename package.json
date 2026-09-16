@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "postinstall": "prisma skills sync || exit 0"
+    "start:api": "node dist/server.js",
+    "start:worker": "node dist/workers/index.js",
+    "start:reaper": "node dist/reaper/index.js",
+    "migrate:deploy": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
